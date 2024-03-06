@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Grail of PWN</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/base16/gruvbox-dark-hard.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="/static/css/base.css">
+</head>
+<body>
+	<div class="sidebar">
+		<a href="/">Home</a></li>
+		<a href="/posts.html">Posts</a>
+
+		<div class="post-recent">
+		<h2>Recent</h2>
+		{% for post in posts[:5] %}
+		<a href="/{{post.out_path}}">{{ post.data["title"] }}</a>
+		{% endfor %}
+		</div>
+
+	</div>
+
+	<div class="content">
+	{% if page.content %}
+		{% if page["title"] %}
+		<h1>{{ page["title"] }}</h1>
+		{% endif %}
+	{{ page["content"]}}
+	{% else %}
+	{% block content %}{% endblock %}
+	{% endif %}
+	</div>
+	
+	<script>hljs.highlightAll();</script>
+</body>
+</html>

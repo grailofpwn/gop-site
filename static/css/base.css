@@ -1,0 +1,50 @@
+body {
+	min-height: 100vh;
+	margin: 0;
+	color: #ebdbb2;
+	background-color: #282828;
+	display: flex;
+}
+
+.sidebar {
+  background-color: #1d2021;
+	min-height: 100vh;
+	width: 14em;
+}
+
+.content {
+	margin: 1em;
+	flex: 1 0 auto;
+}
+
+.sidebar a {
+  padding: 0.5em 1em;
+  text-decoration: none;
+  font-size: 15px;
+  color: #ebdbb2;
+  display: block;
+}
+
+.sidebar a:hover {
+  color: #fbf1c7;
+}
+
+.sidebar .post-recent {
+	margin-left: 1em;
+	font-size: 10px;
+}
+
+.sidebar .post-recent h2 {
+	color: #928374;
+	margin: 0.5em 0.1em;
+}
+
+.sidebar .post-recent a {
+	padding: 0.1em 1.5em;
+}
+
+.post-list {
+	display: flex;
+	flex-direction: column;
+}
+
