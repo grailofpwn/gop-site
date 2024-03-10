@@ -9,12 +9,21 @@ body {
 .sidebar {
   background-color: #1d2021;
 	min-height: 100vh;
-	width: 14em;
+	width: 20%;
 }
 
 .content {
-	margin: 1em;
-	flex: 1 0 auto;
+	margin: 3% 10%;
+	width: 100%;
+}
+
+.content a {
+  color: #458588;
+  text-decoration: none;
+}
+
+.content a:hover {
+  color: #83a598;
 }
 
 .sidebar a {
@@ -48,3 +57,16 @@ body {
 	flex-direction: column;
 }
 
+.post {
+	display: flex;
+	justify-content: space-between;
+}
+
+.post data::before {
+		  content:'';
+  background: repeating-linear-gradient(to right, currentColor, currentColor 1px, transparent 2px, transparent 4px);
+  height: 1px;
+  flex-grow: 1;
+  display: inline-block;
+  margin-top: 1em;
+}

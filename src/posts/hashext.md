@@ -1,129 +1,22 @@
 ---
-title: Test Blog Post 6
-date: 2024-03-04 11:00:00
+title: Understanding Hash Length Extension Attacks
+date: 2024-03-06 00:00:00
 tags:
- - test
- - idk
- - lots
- - of
- - tags
+ - crypto
 ---
 
-I am writing some stuff here
+In a recent Hack the Box challenge the solution require a hash length extension attack to alter a session token and give a user admin access. I found the idea of this fascinating and wanted to take a look into the implementation of this instead of just using an existing tool. I found [this implementation and explantion](https://github.com/iagox86/hash_extender/tree/master) extremely useful in understanding the attack and in highlighting differences between different hashing algorithms.
 
-``` python
-#!/usr/bin/env python3
+## The Vulnerability
 
-"""
-Usage: gen.py [--serve]
+The attack is made possible by a vulnerability in the [Merkle-Damgård hash function](https://en.wikipedia.org/wiki/Merkle%E2%80%93Damg%C3%A5rd_construction) which is used by a number of hashing algorithms including MD5 and SHA-2. The hashing algorithm will pad the text to be a multiple of the block length and using either the IV (for the first block) or the state from the last bock will generate a new state. This state is then added to the previous one and this is repeated for every block.
 
-Options:
-    -s --serve      Serve the built files.
-    -h --help       Show this screen.
-"""
+This means we can extend the hash as the output we get is just the internal state, we can manually set this state and add more data to get a new hash. To generate the corresponding text we need to pad our input text and then append our added data.
 
-from jinja2 import Environment, FileSystemLoader
-from distutils.dir_util import copy_tree
-import markdown
-import frontmatter
+Note that this attack is possible with an unknown salt as this simply changes the offsets of how much we need to pad and the salt will be added back when the server is checking our data.
 
-import http.server
-import socketserver
-import os
+## Implementing the Attack
 
-from docopt import docopt
+While the afformentioned implementation is perfectly functional, I wanted to write my own to make sure I understood the attack fully. Luckily with the power of [Zig](https://ziglang.org/) I was able to write this generically and it worked first time for all other applicable hashing algorithms in the standard library.
 
-from dataclasses import dataclass
-
-BUILD_DIR = 'build'
-SRC_DIR = 'src'
-
-class Page:
-    def __init__(self, rel_path=None, out_path=None):
-        self.rel_path = rel_path
-        self.out_path = out_path
-
-        if rel_path:
-            self.data = frontmatter.load(os.path.join(SRC_DIR, rel_path)).to_dict()
-            self.data["content"] = markdown.markdown(self.data["content"], extensions=["fenced_code"])
-            if not out_path:
-                self.out_path = rel_path.replace("md", "html")
-
-        else:
-            self.data = {}
-
-        
-def render_file(env, template, rel_filepath, **kwargs):
-    full_filepath = os.path.join(SRC_DIR, rel_filepath)
-
-    if os.path.isdir(full_filepath):
-        print(f"Skipping {filename} as it is a directory.")
-    if not full_filepath.endswith('.md'):
-        print(f"Skipping {filename} as it is not a markdown file.")
-
-    render(env, template, Page(rel_filepath), **kwargs)
-
-def render(env, template, page=None, **kwargs):
-    if page:
-        out_filepath = os.path.join(BUILD_DIR, page.rel_path.replace("md", "html"))
-    else:
-        out_filepath = os.path.join(BUILD_DIR, template)
-        page = Page()
-
-    with open(out_filepath, 'w') as f:
-        f.write(env.get_template(template).render(page=page.data, **kwargs))
-
-
-def build():
-    posts = []
-    tags_dict = {}
-    for filename in os.listdir(os.path.join(SRC_DIR, "posts")):
-        rel_filepath = os.path.join("posts", filename)
-        full_filepath = os.path.join(SRC_DIR, rel_filepath)
-
-        page = Page(rel_filepath)
-        posts.append(page)
-
-        for tag in page.data.get("tags", []):
-            tags_dict[tag] = None
-
-
-    tags = list(tags_dict.keys())
-    posts = sorted(posts, key=lambda x: x.data["date"], reverse=True )
-
-    print(posts[0].rel_path)
-
-    env = Environment(loader=FileSystemLoader("templates"))
-    env.globals['posts'] = posts
-    env.globals['tags'] = tags
-
-    copy_tree('static', os.path.join(BUILD_DIR, 'static'))
-
-    render_file(env, "layout.html", "index.md")
-    render(env, "posts.html" )
-
-    for post in posts:
-        render(env, "layout.html", post)
-
-def serve():
-    PORT = 8000
-
-    os.chdir(BUILD_DIR)
-    try:
-        with socketserver.TCPServer(("", PORT), http.server.SimpleHTTPRequestHandler) as httpd:
-            print(f"Serving HTTP on 0.0.0.0 port {PORT} (http://0.0.0.0:{PORT}/) ...")
-            httpd.serve_forever()
-    except KeyboardInterrupt:
-        print("Keyboard interrupt received. exiting.")
-        httpd.shutdown()
-
-
-if __name__ == "__main__":
-    opts = docopt(__doc__)
-
-    build()
-
-    if opts['--serve']:
-        serve()
-```
-
+[See the source here](https://github.com/grailofpwn/exthash).

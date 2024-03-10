@@ -6,7 +6,7 @@
 <div class="post-full">
 {% for post in posts %}
 	<div class="post">
-			<a href="/{{post.out_path}}">{{ post.data["title"] }}</a>
+			<a href="/{{post.out_path}}">{{ post.data["title"] }}</a><span class="date">{{ post.data["date"].strftime("%d/%m/%y") }}</span>
 	</div>
 {% endfor %}
 </div>
